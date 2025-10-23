@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>World Wide Language — All-in-one</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+    :root{
+        --bg:#f4f7fb; --card:#ffffff; --accent:#5b7cfa; --muted:#7b8794;
+        --success:#2fa36b; --danger:#e74c3c;
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; background:var(--bg); color:#102032;}
+    .wrap{max-width:1100px;margin:28px auto;padding:20px;}
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(16,32,50,0.06);}
+
+    /* Top bar */
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#6ad3ff);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    h1{margin:0;font-size:18px}
+    .controls{display:flex;gap:10px;align-items:center}
+    .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-ghost{background:transparent;border:1px solid rgba(16,32,50,0.06);color:var(--muted)}
+    .small{font-size:13px;padding:6px 10px;border-radius:8px}
+
+    /* Login/register pages */
+    .centered{max-width:420px;margin:60px auto}
+    .field{margin-bottom:10px}
+    input[type="text"], input[type="password"], input[type="email"], select, textarea{
+        width:100%;padding:10px;border-radius:8px;border:1px solid #e6ecf2;font-size:14px;
+    }
+
+    /* Homepage grid */
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:18px;margin-top:14px}
+    .left-col{display:flex;flex-direction:column;gap:12px}
+    .profile-card{display:flex;gap:12px;align-items:center}
+    .avatar{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#ffd27a,#ff9a8b);display:flex;align-items:center;justify-content:center;font-weight:700;color:#3c2b0a}
+    .profile-meta small{display:block;color:var(--muted)}
+    .lang-pill{display:inline-block;padding:6px 8px;border-radius:999px;border:1px solid #eef3ff;margin-right:8px;font-size:13px}
+
+    .card-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+    .user-card{padding:14px;border-radius:12px;background:linear-gradient(180deg,#ffffff,#fbfdff);box-shadow:0 6px 14px rgba(16,32,50,0.04);display:flex;flex-direction:column;gap:10px}
+    .user-top{display:flex;justify-content:space-between;align-items:center}
+    .user-name{font-weight:700}
+    .user-langs{font-size:13px;color:var(--muted)}
+    .card-actions{display:flex;gap:8px}
+    .badge{font-size:12px;padding:5px 8px;border-radius:999px;border:1px solid #eef3ff}
+
+    /* Chat panel */
+    .chat-panel{display:flex;flex-direction:column;height:650px}
+    .chat-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #f0f4f9}
+    .messages{flex:1;padding:14px;overflow:auto;background:linear-gradient(180deg,#fbfdff,#ffffff);border-radius:8px;margin:12px 0}
+    .msg{max-width:70%;margin-bottom:8px;padding:8px 10px;border-radius:10px;font-size:14px}
+    .msg.me{align-self:flex-end;background:linear-gradient(180deg,#dfe9ff,var(--accent));color:#072bff}
+    .msg.them{align-self:flex-start;background:#eef4ff;color:#02346a}
+    .msg time{display:block;font-size:11px;color:rgba(0,0,0,0.35);margin-top:6px}
+    .chat-input{display:flex;gap:8px}
+    textarea{resize:none;height:58px;padding:10px;border-radius:8px;border:1px solid #e6ecf2;font-size:14px}
+
+    /* small screens */
+    @media (max-width:900px){
+        .layout{grid-template-columns:1fr; margin-bottom:30px}
+        .chat-panel{height:500px}
+    }
+
+    .muted{color:var(--muted);font-size:13px}
+    .danger{color:var(--danger)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <!-- HEADER -->
+    <header>
+        <div class="brand">
+            <div class="logo">WWL</div>
+            <div>
+                <h1>World Wide Language</h1>
+                <div class="muted">Find language buddies • practice • chat</div>
+            </div>
+        </div>
+
+        <div class="controls" id="topControls">
+            <!-- dynamic -->
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT: We'll switch between views (login/register/home) -->
+    <main id="app">
+
+        <!-- LOGIN / REGISTER (initial view if not signed in) -->
+        <section id="authView" class="card centered" style="display:none">
+            <div style="display:flex;gap:18px;align-items:flex-start">
+                <div style="flex:1">
+                    <h2 style="margin-top:0">Welcome back</h2>
+                    <p class="muted">Log in to continue to World Wide Language</p>
+
+                    <div style="margin-top:12px">
+                        <div class="field"><input id="login_username" type="text" placeholder="Username"></div>
+                        <div class="field"><input id="login_password" type="password" placeholder="Password"></div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-primary" onclick="doLogin()" title="Login">Login</button>
+                            <button class="btn btn-ghost" onclick="showRegisterForm()">Register</button>
+                        </div>
+                        <div style="margin-top:10px"><small class="muted">Tip: accounts are stored in your browser only (localStorage).</small></div>
+                    </div>
+                </div>
+
+                <div style="width:320px;">
+                    <div style="background:linear-gradient(180deg,#ffffff,#f8fcff);padding:14px;border-radius:10px">
+                        <h3 style="margin:0 0 6px 0">Quick demo users</h3>
+                        <p class="muted" style="margin-top:0">These are seeded users you can chat with.</p>
+                        <ul id="seedList" style="padding-left:16px;margin:8px 0"></ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- REGISTER FORM (modal-like) -->
+        <section id="registerView" class="card centered" style="display:none">
+            <h2 style="margin-top:0">Create an account</h2>
+            <div class="field"><input id="reg_username" type="text" placeholder="Choose username"></div>
+            <div class="field"><input id="reg_password" type="password" placeholder="Choose password"></div>
+            <div class="field">
+                <label class="muted">Language(s) you <strong>speak</strong></label>
+                <select id="reg_speak">
+                    <option>English</option>
+                    <option>Tagalog</option>
+                    <option>Spanish</option>
+                    <option>French</option>
+                    <option>Japanese</option>
+                    <option>Korean</option>
+                    <option>Mandarin</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="muted">Language you want to <strong>learn</strong></label>
+                <select id="reg_learn">
+                    <option>English</option>
+                    <option>Tagalog</option>
+                    <option>Spanish</option>
+                    <option>French</option>
+                    <option>Japanese</option>
+                    <option>Korean</option>
+                    <option>Mandarin</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="btn btn-primary" onclick="doRegister()">Register</button>
+                <button class="btn btn-ghost" onclick="showAuth()">Back</button>
+            </div>
+        </section>
+
+        <!-- HOMEPAGE: Card style -->
+        <section id="homeView" style="display:none">
+            <div class="layout">
+
+                <!-- LEFT: profile + actions -->
+                <aside class="left-col">
+                    <div class="card profile-card">
+                        <div class="avatar" id="profileAvatar">U</div>
+                        <div class="profile-meta">
+                            <div id="profileName" style="font-weight:800">—</div>
+                            <small id="profileLangs" class="muted">—</small>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div style="display:flex;justify-content:space-between;align-items:center">
+                            <div><strong>My settings</strong><div class="muted" style="font-size:13px">Edit your spoken / learning languages</div></div>
+                        </div>
+                        <div style="margin-top:10px">
+                            <div class="field">
+                                <label class="muted">I speak</label>
+                                <select id="mySpeak"></select>
+                            </div>
+                            <div class="field">
+                                <label class="muted">I want to learn</label>
+                                <select id="myLearn"></select>
+                            </div>
+                            <div style="display:flex;gap:8px">
+                                <button class="btn btn-primary" onclick="saveProfile()">Save</button>
+                                <button class="btn btn-ghost" onclick="logout()">Logout</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <strong>Tips</strong>
+                        <ul style="margin-top:8px">
+                            <li class="muted">Click "Chat" on any card to start.</li>
+                            <li class="muted">Messages are stored in your browser.</li>
+                            <li class="muted">You can seed more demo users from top bar.</li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <!-- RIGHT: users list + chat -->
+                <section>
+                    <div class="card" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            <strong>Find a buddy — User Cards</strong>
+                            <div class="muted" style="font-size:13px">See what languages they speak and want to learn</div>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <label class="muted small">Show only matching partners</label>
+                            <input type="checkbox" id="filterMatch" onchange="renderUserCards()" title="Show only users where speak/learn match" />
+                            <button class="btn small" onclick="seedDemoUsers()">Seed demo users</button>
+                            <button class="btn small" onclick="clearAllData()" title="Reset local data">Reset</button>
+                        </div>
+                    </div>
+
+                    <div class="card-list card" id="usersGrid" style="margin-bottom:14px;padding:14px"></div>
+
+                    <!-- Chat panel -->
+                    <div class="card chat-panel" id="chatPanel" style="display:none">
+                        <div class="chat-header">
+                            <div>
+                                <strong id="chatWith">Chat</strong>
+                                <div class="muted" id="chatWithLang"></div>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <button class="btn btn-ghost small" onclick="closeChat()">Close</button>
+                                <button class="btn small" onclick="clearChat()">Clear Chat</button>
+                            </div>
+                        </div>
+
+                        <div class="messages" id="messages"></div>
+
+                        <div class="chat-input">
+                            <textarea id="msgText" placeholder="Type a message..."></textarea>
+                            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+                                <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+                                <button class="btn btn-ghost small" onclick="insertEmoji('😊')">😊</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script>
+/* -----------------------
+   Data model (localStorage)
+   - users: object { username: {password, speak, learn} }
+   - currentUser: username string
+   - chats: stored as key `chat_{a}_{b}` where a and b sorted lexicographically; value JSON array [{sender, text, time}]
+   ----------------------- */
+
+const LANGS = ["English","Tagalog","Spanish","French","Japanese","Korean","Mandarin"];
+const USERS_KEY = "wwl_users_v1";
+const CURRENT_KEY = "wwl_current_v1";
+
+function getUsers(){
+    return JSON.parse(localStorage.getItem(USERS_KEY) || "{}");
+}
+function saveUsers(obj){
+    localStorage.setItem(USERS_KEY, JSON.stringify(obj));
+}
+function setCurrent(u){
+    if(u) localStorage.setItem(CURRENT_KEY, u);
+    else localStorage.removeItem(CURRENT_KEY);
+}
+function getCurrent(){
+    return localStorage.getItem(CURRENT_KEY);
+}
+function chatKey(a,b){
+    const [x,y] = [a,b].sort();
+    return `chat_${x}_${y}`;
+}
+function loadChat(a,b){
+    return JSON.parse(localStorage.getItem(chatKey(a,b)) || "[]");
+}
+function saveChat(a,b,arr){
+    localStorage.setItem(chatKey(a,b), JSON.stringify(arr));
+}
+
+/* ---------- UI helpers ---------- */
+function el(tag,atts={},inner=""){const e=document.createElement(tag);for(const k in atts) e.setAttribute(k,atts[k]); if(typeof inner==="string") e.innerHTML=inner; else if(inner) e.appendChild(inner); return e;}
+
+/* ---------- AUTH flow ---------- */
+function showAuth(){
+    document.getElementById("authView").style.display="block";
+    document.getElementById("registerView").style.display="none";
+    document.getElementById("homeView").style.display="none";
+    renderTopControls(false);
+    renderSeedList();
+}
+function showRegisterForm(){
+    document.getElementById("authView").style.display="none";
+    document.getElementById("registerView").style.display="block";
+    document.getElementById("homeView").style.display="none";
+    populateSelectsForRegister();
+    renderTopControls(false);
+}
+function showHome(){
+    document.getElementById("authView").style.display="none";
+    document.getElementById("registerView").style.display="none";
+    document.getElementById("homeView").style.display="block";
+    renderTopControls(true);
+    populateProfileSelects();
+    renderProfile();
+    renderUserCards();
+    closeChat();
+}
+
+/* Login/Register actions */
+function doRegister(){
+    const u = document.getElementById("reg_username").value.trim();
+    const p = document.getElementById("reg_password").value;
+    const speak = document.getElementById("reg_speak").value;
+    const learn = document.getElementById("reg_learn").value;
+    if(!u || !p){ alert("Please enter username and password."); return; }
+    const users = getUsers();
+    if(users[u]) { alert("Username already exists."); return; }
+    users[u] = { password: p, speak, learn };
+    saveUsers(users);
+    alert("Registered — you can now log in.");
+    document.getElementById("reg_username").value = "";
+    document.getElementById("reg_password").value = "";
+    showAuth();
+    renderSeedList();
+}
+
+function doLogin(){
+    const u = document.getElementById("login_username").value.trim();
+    const p = document.getElementById("login_password").value;
+    if(!u || !p){ alert("Please fill in both fields."); return; }
+    const users = getUsers();
+    if(users[u] && users[u].password === p){
+        setCurrent(u);
+        document.getElementById("login_username").value = "";
+        document.getElementById("login_password").value = "";
+        showHome();
+    } else {
+        alert("Incorrect username or password.");
+    }
+}
+function logout(){
+    setCurrent(null);
+    showAuth();
+}
+
+/* ---------- Seed demo users ---------- */
+function seedDemoUsers(){
+    const demos = {
+        "maria":{password:"pass",speak:"Tagalog",learn:"English"},
+        "kenji":{password:"pass",speak:"Japanese",learn:"Spanish"},
+        "ana":{password:"pass",speak:"English",learn:"Japanese"},
+        "sofia":{password:"pass",speak:"Spanish",learn:"English"},
+        "li":{password:"pass",speak:"Mandarin",learn:"Korean"}
+    };
+    const users = getUsers();
+    for(const k in demos) if(!users[k]) users[k]=demos[k];
+    saveUsers(users);
+    alert("Demo users seeded.");
+    renderSeedList();
+    renderUserCards();
+}
+
+/* ---------- Render UI fragments ---------- */
+function renderTopControls(signedIn){
+    const top = document.getElementById("topControls");
+    top.innerHTML = "";
+    if(!signedIn){
+        const seedBtn = el("button",{"class":"btn small"}, "Seed users");
+        seedBtn.onclick = seedDemoUsers;
+        top.appendChild(seedBtn);
+    } else {
+        const cur = getCurrent();
+        const users = getUsers();
+        const meta = users[cur];
+        const btnProfile = el("div",{} , `<div style="text-align:right"><div style="font-weight:800">${cur}</div><div class="muted" style="font-size:12px">${meta.speak} • learning ${meta.learn}</div></div>`);
+        const logoutBtn = el("button",{"class":"btn btn-ghost small"},"Logout");
+        logoutBtn.onclick = logout;
+        const seedBtn = el("button",{"class":"btn small"},"Seed users");
+        seedBtn.onclick = seedDemoUsers;
+        top.appendChild(seedBtn);
+        top.appendChild(btnProfile);
+        top.appendChild(logoutBtn);
+    }
+}
+
+function renderSeedList(){
+    const list = document.getElementById("seedList");
+    list.innerHTML = "";
+    const users = getUsers();
+    for(const u in users){
+        const li = document.createElement("li");
+        li.innerHTML = `${u} — ${users[u].speak} → ${users[u].learn}`;
+        list.appendChild(li);
+    }
+}
+
+/* ---------- Homepage / profile ---------- */
+function populateSelectsForRegister(){
+    const s = document.getElementById("reg_speak");
+    const l = document.getElementById("reg_learn");
+    s.innerHTML = ""; l.innerHTML="";
+    LANGS.forEach(x=>{ s.appendChild(el("option",{},x)); l.appendChild(el("option",{},x)); });
+}
+
+function populateProfileSelects(){
+    const s = document.getElementById("mySpeak");
+    const l = document.getElementById("myLearn");
+    s.innerHTML=""; l.innerHTML="";
+    LANGS.forEach(x=>{ s.appendChild(el("option",{},x)); l.appendChild(el("option",{},x)); });
+    const cur = getCurrent();
+    const users = getUsers();
+    if(cur && users[cur]){
+        s.value = users[cur].speak || LANGS[0];
+        l.value = users[cur].learn || LANGS[0];
+    }
+}
+function saveProfile(){
+    const cur = getCurrent();
+    if(!cur){ alert("Not signed in."); return; }
+    const users = getUsers();
+    users[cur].speak = document.getElementById("mySpeak").value;
+    users[cur].learn = document.getElementById("myLearn").value;
+    saveUsers(users);
+    renderProfile();
+    renderUserCards();
+    alert("Profile updated.");
+}
+function renderProfile(){
+    const cur = getCurrent();
+    const users = getUsers();
+    if(!cur || !users[cur]) return;
+    document.getElementById("profileName").innerText = cur;
+    document.getElementById("profileLangs").innerText = `${users[cur].speak} • learning ${users[cur].learn}`;
+    document.getElementById("profileAvatar").innerText = cur.charAt(0).toUpperCase();
+}
+
+/* ---------- User cards and matching ---------- */
+function renderUserCards(){
+    const grid = document.getElementById("usersGrid");
+    grid.innerHTML = "";
+    const users = getUsers();
+    const cur = getCurrent();
+    if(!cur){ grid.innerHTML = "<div class='muted'>Sign in to see users.</div>"; return; }
+    const filterMatch = document.getElementById("filterMatch").checked;
+    for(const u in users){
+        if(u === cur) continue;
+        if(filterMatch){
+            // show only where user's learn === other.speak OR user's speak === other.learn (mutual interest)
+            const me = users[cur];
+            const other = users[u];
+            const mutual = (me.learn === other.speak) || (me.speak === other.learn);
+            if(!mutual) continue;
+        }
+        const other = users[u];
+        const card = el("div",{"class":"user-card"});
+        const top = el("div",{"class":"user-top"});
+        top.appendChild(el("div",{},`<div class="user-name">${u}</div><div class="user-langs">${other.speak} • learning ${other.learn}</div>`));
+        const actions = el("div",{"class":"card-actions"});
+        const chatBtn = el("button",{"class":"btn btn-primary small"},"Chat");
+        chatBtn.onclick = ()=>openChat(u);
+        const viewBtn = el("button",{"class":"btn btn-ghost small"},"View");
+        viewBtn.onclick = ()=>viewProfile(u);
+        actions.appendChild(chatBtn); actions.appendChild(viewBtn);
+        top.appendChild(actions);
+        card.appendChild(top);
+        // badges
+        const badges = el("div",{},`<span class="badge">Speaks: ${other.speak}</span> <span class="badge">Learning: ${other.learn}</span>`);
+        card.appendChild(badges);
+        grid.appendChild(card);
+    }
+}
+
+/* Quick profile view (alert) */
+function viewProfile(u){
+    const users = getUsers();
+    if(!users[u]) { alert("User not found."); return; }
+    alert(`${u}\nSpeaks: ${users[u].speak}\nLearning: ${users[u].learn}`);
+}
+
+/* ---------- Chat functions ---------- */
+let activeChatWith = null;
+
+function openChat(other){
+    const me = getCurrent();
+    if(!me){ alert("Please login first."); return; }
+    activeChatWith = other;
+    document.getElementById("chatPanel").style.display = "flex";
+    document.getElementById("chatWith").innerText = `Chat with ${other}`;
+    const users = getUsers();
+    document.getElementById("chatWithLang").innerText = `${users[other].speak} • learning ${users[other].learn}`;
+    renderMessages();
+    // scroll to bottom after small delay
+    setTimeout(()=>{ const m=document.getElementById("messages"); m.scrollTop=m.scrollHeight; },120);
+}
+
+function closeChat(){
+    activeChatWith = null;
+    document.getElementById("chatPanel").style.display = "none";
+    document.getElementById("msgText").value = "";
+}
+
+function renderMessages(){
+    if(!activeChatWith) return;
+    const me = getCurrent();
+    const arr = loadChat(me, activeChatWith);
+    const box = document.getElementById("messages");
+    box.innerHTML = "";
+    if(arr.length===0){
+        box.innerHTML = `<div class="muted">No messages yet — say hi 👋</div>`;
+        return;
+    }
+    arr.forEach(m=>{
+        const div = el("div",{"class":"msg " + (m.sender===me ? "me" : "them")});
+        div.innerHTML = `<div>${escapeHtml(m.text)}</div><time>${(new Date(m.time)).toLocaleString()}</time>`;
+        box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+}
+
+function sendMessage(){
+    if(!activeChatWith){ alert("Open a chat first."); return; }
+    const me = getCurrent();
+    const text = document.getElementById("msgText").value.trim();
+    if(!text) return;
+    const arr = loadChat(me, activeChatWith);
+    arr.push({ sender: me, text, time: Date.now() });
+    saveChat(me, activeChatWith, arr);
+    document.getElementById("msgText").value = "";
+    renderMessages();
+}
+
+function clearChat(){
+    if(!activeChatWith) return;
+    if(!confirm("Clear all messages between you and " + activeChatWith + " ?")) return;
+    localStorage.removeItem(chatKey(getCurrent(), activeChatWith));
+    renderMessages();
+}
+
+/* ---------- Utilities ---------- */
+function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function insertEmoji(e){
+    const t = document.getElementById("msgText");
+    t.value = t.value + e;
+    t.focus();
+}
+
+/* Reset local data (use cautiously) */
+function clearAllData(){
+    if(!confirm("This will remove all stored users and chats from your browser. Continue?")) return;
+    localStorage.removeItem(USERS_KEY);
+    localStorage.removeItem(CURRENT_KEY);
+    // remove chat keys
+    Object.keys(localStorage).forEach(k=>{ if(k.startsWith("chat_")) localStorage.removeItem(k); });
+    location.reload();
+}
+
+/* ---------- initial boot ---------- */
+function boot(){
+    // populate register select lists
+    populateSelectsForRegister();
+    const cur = getCurrent();
+    if(!getUsers() || Object.keys(getUsers()).length===0){
+        // seed a couple initial users but don't overwrite if present
+        seedDemoUsers();
+    }
+    if(cur){
+        showHome();
+    } else {
+        showAuth();
+    }
+}
+boot();
+</script>
+</body>
+</html>
